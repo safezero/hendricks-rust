@@ -4,20 +4,20 @@ use encoders::fixed::Fixed;
 use num_traits::FromPrimitive;
 use template_ids::TemplateId;
 
-pub struct Template<'a> {
-    encoder: &'a Encoder
+pub struct Template {
+    encoder: Box<Encoder>
 }
 
-impl<'a> Template<'a> {
-    pub fn new(encoder: &'a Encoder) -> Template{
+impl Template {
+    pub fn new(encoder: Box<Encoder>) -> Template{
         Template {
             encoder
         }
     }
-    pub fn from_jinyang(jinyang: &'a [u8]) -> Result<(Template), Error> {
+    pub fn from_jinyang<'a>(jinyang: &'a [u8]) -> Result<(Template), Error> {
         Ok(Self::from_jinyang_with_remainder(jinyang).unwrap().0)
     }
-    pub fn from_jinyang_with_remainder(jinyang: &'a [u8]) -> Result<(Template, &'a [u8]), Error> {
+    pub fn from_jinyang_with_remainder<'a>(jinyang: &'a [u8]) -> Result<(Template, &'a [u8]), Error> {
         let template_id = TemplateId::from_u8(jinyang[0]).unwrap();
         let mut encoder_and_remainder;
         match(template_id) {
@@ -31,17 +31,16 @@ impl<'a> Template<'a> {
                 panic!();
             }
         }
-        let encoder = encoder_and_remainder.0;
         Ok((
-            Template::new(&encoder),
+            Template::new(Box::new(encoder_and_remainder.0)),
             encoder_and_remainder.1
         ))
     }
     pub fn id(&self) -> u8 {
         self.encoder.template_id()
     }
-    pub fn encoder(&self) -> &'a Encoder {
-        self.encoder
+    pub fn encoder(&self) -> &Box<Encoder> {
+        &self.encoder
     }
     pub fn encode(&self, bytes:&[u8]) -> Result<Vec<u8>, Error> {
         let mut encoding = vec![];
@@ -51,7 +50,7 @@ impl<'a> Template<'a> {
             Ok(_) => Ok(encoding)
         }
     }
-    pub fn decode(&self, bytes: &'a [u8]) -> Result<&'a [u8], Error> {
+    pub fn decode<'a>(&self, bytes: &'a [u8]) -> Result<&'a [u8], Error> {
         match self.encoder.decode_with_remainder(&bytes) {
             Err(error) => Err(error),
             Ok(tuple) => {

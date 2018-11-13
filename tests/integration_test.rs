@@ -17,7 +17,7 @@ mod tests {
                 let fixedEncoderResult = Fixed::new(template_id, length);
                 match fixedEncoderResult {
                     Ok(fixedEncoder) => {
-                        then(Template::new(&fixedEncoder));
+                        then(Template::new(Box::new(fixedEncoder)));
                     },
                     Err(err) => {
                         panic!();
