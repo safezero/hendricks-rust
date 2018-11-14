@@ -3,6 +3,7 @@ use traits::encoder::Encoder;
 use template_ids::TemplateId;
 use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
 use std::io::Cursor;
+use std::any::Any;
 
 pub struct Fixed {
     template_id: TemplateId,
@@ -11,9 +12,7 @@ pub struct Fixed {
 
 impl Fixed  {
     pub fn new(template_id: TemplateId, length: usize) -> Result<Fixed, Error> {
-
         let mut optionalError: Option<Error> = None;
-
         match (template_id) {
             TemplateId::FixedAlpha => {
                 if (length < 1) {
@@ -68,6 +67,16 @@ impl Fixed  {
     }
     fn length(&self) -> usize {
         self.length
+    }
+}
+
+impl std::cmp::PartialEq for Fixed {
+    fn eq(&self, other: &Fixed) -> bool {
+        if (self.length() != other.length()) {
+            false
+        } else {
+            true
+        }
     }
 }
 
