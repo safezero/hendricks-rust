@@ -5,6 +5,7 @@ mod tests {
     use hendricks::template_ids::TemplateId;
     use hendricks::template::Template;
     use hendricks::encoders::fixed::Fixed;
+    use hendricks::traits::encoder::Encoder;
     use hendricks::error::Error;
 
     fn create_fixed_template_then<F>(
@@ -188,10 +189,13 @@ mod tests {
 
     #[test]
     fn should_from_jinyang_alpha() {
-        // let template1 = Template::from_jinyang(&[0, 0]).unwrap();
-        // let encoder1: &Fixed = template1.encoder();
-        // assert_eq!(template1.id(), 0);
-        // assert_eq!(encoder1.length(), 1);
+        let template1 = Template::from_jinyang(&[0, 0]).unwrap();
+        assert_eq!(template1.id(), 0);
+        assert_eq!(template1.export_jinyang(), vec![0, 0]);
+
+        //TODO: test template1.encoder().length()
     }
+
+
 
 }

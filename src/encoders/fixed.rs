@@ -68,6 +68,7 @@ impl Fixed  {
     fn length(&self) -> usize {
         self.length
     }
+
 }
 
 impl std::cmp::PartialEq for Fixed {
