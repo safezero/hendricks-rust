@@ -178,22 +178,33 @@ mod tests {
     }
 
     #[test]
-    fn should_export_jinyang_alpha() {
-        create_fixed_template_then(TemplateId::FixedAlpha, 1, |template| {
-            assert_eq!(template.export_jinyang(), vec![0, 0]);
-        });
-        create_fixed_template_then(TemplateId::FixedAlpha, 256, |template| {
-            assert_eq!(template.export_jinyang(), vec![0, 255]);
-        });
+    fn should_jinyang_alpha() {
+        let template1 = Template::from_jinyang(&[0, 0]).unwrap();
+        let fixed1 : &Fixed = template1.encoder().as_any().downcast_ref().unwrap();
+        assert_eq!(template1.id(), 0);
+        assert_eq!(fixed1.length(), 1);
+        assert_eq!(template1.export_jinyang(), vec![0, 0]);
+
+        let template256 = Template::from_jinyang(&[0, 255]).unwrap();
+        let fixed256 : &Fixed = template256.encoder().as_any().downcast_ref().unwrap();
+        assert_eq!(template256.id(), 0);
+        assert_eq!(fixed256.length(), 256);
+        assert_eq!(template256.export_jinyang(), vec![0, 255]);
     }
 
     #[test]
-    fn should_from_jinyang_alpha() {
-        let template1 = Template::from_jinyang(&[0, 0]).unwrap();
-        assert_eq!(template1.id(), 0);
-        assert_eq!(template1.export_jinyang(), vec![0, 0]);
+    fn should_jinyang_beta() {
+        let template257 = Template::from_jinyang(&[1, 0, 0]).unwrap();
+        let fixed257 : &Fixed = template257.encoder().as_any().downcast_ref().unwrap();
+        assert_eq!(template257.id(), 1);
+        assert_eq!(fixed257.length(), 257);
+        assert_eq!(template257.export_jinyang(), vec![1, 0, 0]);
 
-        //TODO: test template1.encoder().length()
+        let template65792 = Template::from_jinyang(&[1, 255, 255]).unwrap();
+        let fixed65792 : &Fixed = template65792.encoder().as_any().downcast_ref().unwrap();
+        assert_eq!(template65792.id(), 1);
+        assert_eq!(fixed65792.length(), 65792);
+        assert_eq!(template65792.export_jinyang(), vec![1, 255, 255]);
     }
 
 

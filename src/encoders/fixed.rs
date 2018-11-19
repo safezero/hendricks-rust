@@ -46,7 +46,7 @@ impl Fixed  {
                 Ok((
                     Fixed::new(
                         TemplateId::FixedAlpha,
-                        (&jinyang[0] + 1) as usize
+                        (jinyang[0] as usize) + 1
                     ).unwrap(),
                     &jinyang[1..]
                 ))
@@ -54,8 +54,8 @@ impl Fixed  {
             TemplateId::FixedBeta => {
                 Ok((
                     Fixed::new(
-                        TemplateId::FixedAlpha,
-                        Cursor::new(&jinyang[0..2]).read_u16::<LittleEndian>().unwrap() as usize
+                        TemplateId::FixedBeta,
+                        Cursor::new(&jinyang[0..2]).read_u16::<LittleEndian>().unwrap() as usize + 257
                     ).unwrap(),
                     &jinyang[2..]
                 ))
@@ -65,7 +65,7 @@ impl Fixed  {
             }
         }
     }
-    fn length(&self) -> usize {
+    pub fn length(&self) -> usize {
         self.length
     }
 
@@ -115,5 +115,8 @@ impl Encoder for Fixed {
             },
             _ => panic!()
         }
+    }
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
