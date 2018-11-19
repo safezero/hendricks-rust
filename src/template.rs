@@ -1,6 +1,7 @@
 use error::Error;
 use traits::encoder::Encoder;
 use encoders::fixed::Fixed;
+use encoders::dynamic::Dynamic;
 use num_traits::FromPrimitive;
 use template_ids::TemplateId;
 
@@ -19,22 +20,34 @@ impl Template {
     }
     pub fn from_jinyang_with_remainder<'a>(jinyang: &'a [u8]) -> Result<(Template, &'a [u8]), Error> {
         let template_id = TemplateId::from_u8(jinyang[0]).unwrap();
-        let mut encoder_and_remainder;
         match(template_id) {
             TemplateId::FixedAlpha | TemplateId::FixedBeta => {
-                encoder_and_remainder = Fixed::from_jinyang_with_remainder(
+                let encoder_and_remainder = Fixed::from_jinyang_with_remainder(
                     template_id,
                     &jinyang[1..]
                 ).unwrap();
+                Ok((
+                    Template::new(Box::new(encoder_and_remainder.0)),
+                    encoder_and_remainder.1
+                ))
+            },
+            TemplateId::DynamicAlpha |
+            TemplateId::DynamicBeta |
+            TemplateId::DynamicGamma |
+            TemplateId::DynamicDelta => {
+                let encoder_and_remainder = Dynamic::from_jinyang_with_remainder(
+                    template_id,
+                    &jinyang[1..]
+                ).unwrap();
+                Ok((
+                    Template::new(Box::new(encoder_and_remainder.0)),
+                    encoder_and_remainder.1
+                ))
             },
             _ => {
                 panic!();
             }
         }
-        Ok((
-            Template::new(Box::new(encoder_and_remainder.0)),
-            encoder_and_remainder.1
-        ))
     }
     pub fn id(&self) -> u8 {
         self.encoder.template_id()

@@ -12,32 +12,32 @@ pub struct Fixed {
 
 impl Fixed  {
     pub fn new(template_id: TemplateId, length: usize) -> Result<Fixed, Error> {
-        let mut optionalError: Option<Error> = None;
+        let mut optional_error: Option<Error> = None;
         match (template_id) {
             TemplateId::FixedAlpha => {
                 if (length < 1) {
-                    optionalError = Some(Error::fixed__new__alpha__length_too_small);
+                    optional_error = Some(Error::fixed__new__alpha__length_too_small);
                 }else if (length > 256) {
-                    optionalError = Some(Error::fixed__new__alpha__length_too_big);
+                    optional_error = Some(Error::fixed__new__alpha__length_too_big);
                 }
             },
             TemplateId::FixedBeta => {
                 if (length < 257) {
-                    optionalError = Some(Error::fixed__new__beta__length_too_small);
+                    optional_error = Some(Error::fixed__new__beta__length_too_small);
                 }
                 if (length > 65792) {
-                    optionalError = Some(Error::fixed__new__beta__length_too_big);
+                    optional_error = Some(Error::fixed__new__beta__length_too_big);
                 }
             },
             _ => {
-                optionalError = Some(Error::fixed__new__invalid_template_id);
+                optional_error = Some(Error::fixed__new__invalid_template_id);
             }
         }
 
-        if (optionalError == None) {
+        if (optional_error == None) {
             Ok(Fixed{template_id, length})
         } else {
-            Err(optionalError.unwrap())
+            Err(optional_error.unwrap())
         }
     }
     pub fn from_jinyang_with_remainder(template_id: TemplateId, jinyang: &[u8]) -> Result<(Fixed, &[u8]), Error> {
@@ -45,7 +45,7 @@ impl Fixed  {
             TemplateId::FixedAlpha => {
                 Ok((
                     Fixed::new(
-                        TemplateId::FixedAlpha,
+                        template_id,
                         (jinyang[0] as usize) + 1
                     ).unwrap(),
                     &jinyang[1..]
@@ -54,7 +54,7 @@ impl Fixed  {
             TemplateId::FixedBeta => {
                 Ok((
                     Fixed::new(
-                        TemplateId::FixedBeta,
+                        template_id,
                         Cursor::new(&jinyang[0..2]).read_u16::<LittleEndian>().unwrap() as usize + 257
                     ).unwrap(),
                     &jinyang[2..]
@@ -69,16 +69,6 @@ impl Fixed  {
         self.length
     }
 
-}
-
-impl std::cmp::PartialEq for Fixed {
-    fn eq(&self, other: &Fixed) -> bool {
-        if (self.length() != other.length()) {
-            false
-        } else {
-            true
-        }
-    }
 }
 
 impl Encoder for Fixed {
@@ -99,7 +89,7 @@ impl Encoder for Fixed {
         } else {
             Ok((
                 &bytes[0..self.length],
-                &bytes[self.length..bytes.len()]
+                &bytes[self.length..]
             ))
         }
     }
@@ -110,7 +100,7 @@ impl Encoder for Fixed {
             },
             TemplateId::FixedBeta => {
                 let mut length_encoding = Vec::new();
-                length_encoding.write_u16::<LittleEndian>((self.length - 257) as u16).unwrap();
+                length_encoding.write_u16::<LittleEndian>((self.length - 257) as u16);
                 to.extend_from_slice(&length_encoding[..]);
             },
             _ => panic!()
