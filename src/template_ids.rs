@@ -6,4 +6,8 @@ pub enum TemplateId {
     DynamicBeta =  3,
     DynamicGamma =  4,
     DynamicDelta =  5,
+    DlistAlpha =  6,
+    DlistBeta =  7,
+    DlistGamma =  8,
+    DlistDelta =  9,
 }

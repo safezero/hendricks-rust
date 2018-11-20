@@ -1,9 +1,11 @@
 use error::Error;
 use traits::encoder::Encoder;
 use template_ids::TemplateId;
+use template::Template;
 use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
 use std::io::Cursor;
 use std::any::Any;
+use nest::Nest;
 
 pub struct Dlist {
     template_id: TemplateId,
@@ -48,7 +50,7 @@ impl Dlist  {
                 })
             },
             _ => {
-                Err(Error::Dlist__new__invalid_template_id)
+                Err(Error::dynamic__new__invalid_template_id)
             }
         }
     }
@@ -58,7 +60,7 @@ impl Dlist  {
             | TemplateId::DlistBeta
             | TemplateId::DlistGamma
             | TemplateId::DlistDelta => {
-                let template_and_remainder = Template::from_jinyang_with_remainder(&jinyang);
+                let template_and_remainder = Template::from_jinyang_with_remainder(&jinyang)?;
                 let dlist_result = Dlist::new(template_id, template_and_remainder.0);
                 match(dlist_result) {
                     Ok(Dlist) => Ok((Dlist, template_and_remainder.1)),
@@ -73,23 +75,31 @@ impl Dlist  {
     pub fn length_encoding_length(&self) -> usize {
         self.length_encoding_length
     }
+    pub fn encode_length_to(&self, length: usize, to: &mut Vec<u8>) {
+        if (length > std::u32::MAX as usize) {
+            panic!();
+        }
+        let mut length_encoding = Vec::new();
+        length_encoding.write_u32::<LittleEndian>(length as u32);
+        to.extend_from_slice(&length_encoding[0..self.length_encoding_length]);
+    }
 }
 
 impl Encoder for Dlist {
     fn template_id(&self) -> u8 {
         self.template_id as u8
     }
-    fn encode_to<'a>(&self, bytes: &[u8], to: &'a mut Vec<u8>) -> Result<(), Error> {
-        let mut remainder = &bytes;
-        while(remainder.len() > 0) {
-            let encoding_and_remainder = self.template.encode_
+    fn encode_to<'a>(&self, nest: &Nest, to: &'a mut Vec<u8>) -> Result<(), Error> {
+        let nests = nest.nests();
+        self.encode_length_to(nests.len(), to);
+        for nest in nests {
+            self.template.encode_to(nest, to);
         }
-        to.extend_from_slice(&bytes);
         Ok(())
     }
-    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
+    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(Nest<'a>, &'a [u8]), Error> {
         if bytes.len() < self.length_encoding_length {
-            Err(Error::Dlist__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length)
+            Err(Error::dynamic__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length)
         } else {
             let mut length_encoding = vec![0; 4];
             for i in 0..self.length_encoding_length {
@@ -97,10 +107,10 @@ impl Encoder for Dlist {
             }
             let length = Cursor::new(&length_encoding).read_u32::<LittleEndian>().unwrap() as usize;
             if (bytes.len() < (self.length_encoding_length + length)) {
-                Err(Error::Dlist__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length_plus_length)
+                Err(Error::dynamic__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length_plus_length)
             } else {
                 Ok((
-                    &bytes[self.length_encoding_length..self.length_encoding_length + length],
+                    Nest::Bytes(&bytes[self.length_encoding_length..self.length_encoding_length + length]),
                     &bytes[self.length_encoding_length + length..]
                 ))
             }
