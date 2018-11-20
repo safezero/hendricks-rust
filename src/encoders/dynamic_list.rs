@@ -82,7 +82,7 @@ impl Encoder for Dlist {
     fn encode_to<'a>(&self, bytes: &[u8], to: &'a mut Vec<u8>) -> Result<(), Error> {
         let mut remainder = &bytes;
         while(remainder.len() > 0) {
-            self.
+            let encoding_and_remainder = self.template.encode_
         }
         to.extend_from_slice(&bytes);
         Ok(())

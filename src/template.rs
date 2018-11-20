@@ -4,6 +4,7 @@ use encoders::fixed::Fixed;
 use encoders::dynamic::Dynamic;
 use num_traits::FromPrimitive;
 use template_ids::TemplateId;
+use nest::Nest;
 
 pub struct Template {
     encoder: Box<Encoder>
@@ -55,15 +56,15 @@ impl Template {
     pub fn encoder(&self) -> &Box<Encoder> {
         &self.encoder
     }
-    pub fn encode(&self, bytes:&[u8]) -> Result<Vec<u8>, Error> {
+    pub fn encode(&self, nest:&Nest) -> Result<Vec<u8>, Error> {
         let mut encoding = vec![];
-        let result = self.encoder.encode_to(&bytes, &mut encoding);
+        let result = self.encoder.encode_to(&nest, &mut encoding);
         match result {
             Err(error) => Err(error),
             Ok(_) => Ok(encoding)
         }
     }
-    pub fn decode<'a>(&self, bytes: &'a [u8]) -> Result<&'a [u8], Error> {
+    pub fn decode<'a>(&self, bytes: &'a [u8]) -> Result<Nest<'a>, Error> {
         match self.encoder.decode_with_remainder(&bytes) {
             Err(error) => Err(error),
             Ok(tuple) => {
@@ -80,14 +81,14 @@ impl Template {
         self.export_jinyang_to(&mut jinyang);
         jinyang
     }
-    pub fn encode_to<'b>(&self, bytes: &[u8], to: &'b mut Vec<u8>) -> Result<(), Error> {
+    pub fn encode_to<'a>(&self, nest: &Nest, to: &'a mut Vec<u8>) -> Result<(), Error> {
         to.push(self.encoder.template_id());
-        self.encoder.encode_to(bytes, to)
+        self.encoder.encode_to(nest, to)
     }
-    pub fn decode_with_remainder<'b>(&self, bytes: &'b [u8]) -> Result<(&'b [u8], &'b [u8]), Error> {
+    pub fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(Nest<'a>, &'a [u8]), Error> {
         self.encoder.decode_with_remainder(bytes)
     }
-    pub fn export_jinyang_to<'b>(&self, to: &'b mut Vec<u8>) {
+    pub fn export_jinyang_to<'a>(&self, to: &'a mut Vec<u8>) {
         to.push(self.encoder.template_id());
         self.encoder.export_jinyang_to(to);
     }

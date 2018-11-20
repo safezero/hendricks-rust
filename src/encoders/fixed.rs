@@ -4,6 +4,7 @@ use template_ids::TemplateId;
 use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
 use std::io::Cursor;
 use std::any::Any;
+use nest::Nest;
 
 pub struct Fixed {
     template_id: TemplateId,
@@ -75,7 +76,8 @@ impl Encoder for Fixed {
     fn template_id(&self) -> u8 {
         self.template_id as u8
     }
-    fn encode_to<'a>(&self, bytes: &[u8], to: &'a mut Vec<u8>) -> Result<(), Error> {
+    fn encode_to<'a>(&self, nest: &Nest, to: &'a mut Vec<u8>) -> Result<(), Error> {
+        let bytes = nest.bytes();
         if bytes.len() != self.length {
             Err(Error::fixed__encode_to__bytes_length_should_match_self_length)
         } else {
@@ -83,12 +85,12 @@ impl Encoder for Fixed {
             Ok(())
         }
     }
-    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
+    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(Nest<'a>, &'a [u8]), Error> {
         if bytes.len() < self.length {
             Err(Error::fixed__decode_with_remainder__bytes_length_should_be_gte_self_length)
         } else {
             Ok((
-                &bytes[0..self.length],
+                Nest::Bytes(&bytes[0..self.length]),
                 &bytes[self.length..]
             ))
         }

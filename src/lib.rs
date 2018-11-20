@@ -9,4 +9,5 @@ pub mod traits;
 pub mod template;
 pub mod template_ids;
 pub mod encoders;
+pub mod nest;
 // mod Dynamic;

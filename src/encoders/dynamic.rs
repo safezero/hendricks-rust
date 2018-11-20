@@ -4,6 +4,7 @@ use template_ids::TemplateId;
 use byteorder::{LittleEndian, WriteBytesExt, ReadBytesExt};
 use std::io::Cursor;
 use std::any::Any;
+use nest::Nest;
 
 pub struct Dynamic {
     template_id: TemplateId,
@@ -73,7 +74,8 @@ impl Encoder for Dynamic {
     fn template_id(&self) -> u8 {
         self.template_id as u8
     }
-    fn encode_to<'a>(&self, bytes: &[u8], to: &'a mut Vec<u8>) -> Result<(), Error> {
+    fn encode_to<'a>(&self, nest: &Nest, to: &'a mut Vec<u8>) -> Result<(), Error> {
+        let bytes = nest.bytes();
         if bytes.len() > self.max_length {
             Err(Error::dynamic__encode_to__bytes_length_should_be_lte_max_length)
         } else {
@@ -84,7 +86,7 @@ impl Encoder for Dynamic {
             Ok(())
         }
     }
-    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(&'a [u8], &'a [u8]), Error> {
+    fn decode_with_remainder<'a>(&self, bytes: &'a [u8]) -> Result<(Nest<'a>, &'a [u8]), Error> {
         if bytes.len() < self.length_encoding_length {
             Err(Error::dynamic__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length)
         } else {
@@ -97,7 +99,7 @@ impl Encoder for Dynamic {
                 Err(Error::dynamic__decode_with_remainder__bytes_length_should_be_gte_length_encoding_length_plus_length)
             } else {
                 Ok((
-                    &bytes[self.length_encoding_length..self.length_encoding_length + length],
+                    Nest::Bytes(&bytes[self.length_encoding_length..self.length_encoding_length + length]),
                     &bytes[self.length_encoding_length + length..]
                 ))
             }
